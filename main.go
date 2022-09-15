@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"waysbeans_be/database"
 	"waysbeans_be/pkg/mysql"
 	"waysbeans_be/routes"
@@ -33,9 +34,9 @@ func main() {
 	var AllowedMethods = handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE"})
 	var AllowedOrigins = handlers.AllowedOrigins([]string{"*"})
 
-	var port = ("PORT")
+	var port = os.Getenv("PORT")
 	fmt.Println("server running localhost:" + port)
 
 	// Embed the setup allowed in 2 parameter on this below code ...
-	http.ListenAndServe("localhost:"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
+	http.ListenAndServe(":"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
 }
