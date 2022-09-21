@@ -59,11 +59,11 @@ func UploadFile(next http.HandlerFunc) http.HandlerFunc {
 		tempFile.Write(fileBytes)
 
 		data := tempFile.Name()
-		filename := data[8:] // split uploads/
-		fmt.Println("ini midleware", filename)
+		// split uploads/
+		fmt.Println("ini midleware", data)
 
 		// add filename to ctx
-		ctx := context.WithValue(r.Context(), "dataFile", filename)
+		ctx := context.WithValue(r.Context(), "dataFile", data)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

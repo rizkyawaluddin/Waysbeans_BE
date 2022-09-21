@@ -1,15 +1,19 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	productdto "waysbeans_be/dto/product"
 	dto "waysbeans_be/dto/result"
 	"waysbeans_be/models"
 	"waysbeans_be/repositories"
 
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
@@ -36,9 +40,9 @@ func (h *handlerProduct) FindProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for i, p := range products {
-		products[i].Image = path_file + p.Image
-	}
+	// for i, p := range products {
+	// 	products[i].Image = path_file + p.Image
+	// }
 
 	w.WriteHeader(http.StatusOK)
 	response := dto.SuccessResult{Code: "Success", Data: products}
@@ -58,7 +62,7 @@ func (h *handlerProduct) GetProduct(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	product.Image = path_file + product.Image
+	// product.Image = path_file + product.Image
 
 	w.WriteHeader(http.StatusOK)
 	response := dto.SuccessResult{Code: "Success", Data: convertResponseProduct(product)}
@@ -73,9 +77,9 @@ func (h *handlerProduct) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	userId := int(userInfo["id"].(float64))
 
 	dataContex := r.Context().Value("dataFile")
-	filename := dataContex.(string) // add this code
+	filepath := dataContex.(string) // add this code
 
-	fmt.Println(filename)
+	fmt.Println(filepath)
 
 	price, _ := strconv.Atoi(r.FormValue("price"))
 	Stock, _ := strconv.Atoi(r.FormValue("stock"))
@@ -95,11 +99,26 @@ func (h *handlerProduct) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var ctx = context.Background()
+	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+	var API_KEY = os.Getenv("API_KEY")
+	var API_SECRET = os.Getenv("API_SECRET")
+
+	// Add your Cloudinary credentials ...
+	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	// Upload file to Cloudinary ...
+	resp, err := cld.Upload.Upload(ctx, filepath, uploader.UploadParams{Folder: "waybeans"})
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	product := models.Product{
 		Name:   request.Name,
 		Desc:   request.Desc,
 		Price:  request.Price,
-		Image:  filename,
+		Image:  resp.SecureURL,
 		Stock:  request.Stock,
 		UserID: userId,
 	}
